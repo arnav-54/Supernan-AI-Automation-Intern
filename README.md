@@ -49,3 +49,20 @@ python dub_video.py \
     --end_time 00:00:30 \
     --output_video "final_hindi_dub.mp4"
 ```
+
+## 📈 The "Scale" Question (500 Hours Overnight)
+
+**Question:** How would you modify this script to process 500 hours of video overnight with a budget?
+**Answer:** Processing 500h (~30,000 mins) overnight requires heavy horizontal scaling:
+1. **Infrastructure**: Transition from sequential execution to a distributed microservice architecture on AWS (EKS) or RunPod Serverless.
+2. **Message Queue**: Use RabbitMQ or AWS SQS to distribute video chunks. We'd chunk videos into 2-5 minute segments.
+3. **Pipeline Decoupling**:
+   - `Worker Group A (CPU)`: Downloads and chunks video (FFmpeg).
+   - `Worker Group B (GPU - L4)`: Transcribes using Faster-Whisper.
+   - `Worker Group C (GPU/CPU)`: Translates in bulk.
+   - `Worker Group D (GPU - A100)`: Generates cloned audio with XTTSv2.
+   - `Worker Group E (GPU - A100)`: VideoReTalking is the bottleneck. This requires the largest fleet.
+4. **Assembly**: A final CPU worker merges chunks back using temporal crossfading.
+
+### Estimated Cost at Scale
+- **In-house cluster (RunPod/Lambda)**: ~$0.05 to $0.15 per minute depending on GPU density. ~500 hrs (30k mins) = $1,500 - $4,500.
