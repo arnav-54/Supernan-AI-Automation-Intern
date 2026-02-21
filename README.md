@@ -15,3 +15,26 @@ To achieve max fidelity with a budget of **₹0**, the pipeline strictly leverag
 To run heavy models (VideoReTalking + XTTS v2) on Colab without crashing out of memory:
 - **Modular execution:** The pipeline flushes VRAM between steps (`torch.cuda.empty_cache()` and deleting model instances).
 - **Chunking/Batching**: The translation and voice generation steps batch audio into smaller sentence chunks.
+
+## 🚀 Setup Instructions
+
+We highly recommend running this pipeline in **Google Colab** to easily deploy the GPU-heavy dependencies.
+
+1. **Clone Repo**:
+   ```bash
+   git clone https://github.com/arnav-54/Supernan-AI-Automation-Intern.git
+   cd Supernan-AI-Automation-Intern
+   ```
+2. **Install System Dependencies**:
+   ```bash
+   sudo apt-get update && sudo apt-get install -y ffmpeg
+   ```
+3. **Install Requirements**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. **Clone VideoReTalking**:
+   ```bash
+   git clone https://github.com/OpenTalker/video-retalking.git
+   cd video-retalking && pip install -r requirements.txt && cd ..
+   ```
