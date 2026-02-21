@@ -5,3 +5,7 @@ librosa
 soundfile
 pydub
 ffmpeg-python
+moviepy
+numpy
+torch
+torchaudio
