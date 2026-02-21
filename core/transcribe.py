@@ -10,3 +10,18 @@ def transcribe_audio(audio_path: str):
     
     model = WhisperModel("base", device=device, compute_type=compute_type)
     segments, info = model.transcribe(audio_path, beam_size=5, language="en")
+
+    results = []
+    for segment in segments:
+        results.append({
+            "start": segment.start,
+            "end": segment.end,
+            "text": segment.text.strip()
+        })
+    
+    del model
+    if device == "cuda":
+        torch.cuda.empty_cache()
+    gc.collect()
+    
+    return results
