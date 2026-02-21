@@ -31,3 +31,14 @@ def main():
     
     print("=== Step 4: Translate -> Hindi ===")
     hindi_segments = translate_to_hindi(segments)
+
+    print("=== Step 5: Voice Cloning (XTTS v2) ===")
+    generate_hindi_dub(hindi_segments, ref_audio, hindi_audio)
+    
+    print("=== Step 6: High Fidelity Lipsync (VideoReTalking) ===")
+    run_video_retalking(chunk_video, hindi_audio, args.output_video)
+    
+    print(f"\n✅ Pipeline Complete! Output saved to: {args.output_video}")
+
+if __name__ == "__main__":
+    main()
