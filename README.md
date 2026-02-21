@@ -38,3 +38,14 @@ We highly recommend running this pipeline in **Google Colab** to easily deploy t
    git clone https://github.com/OpenTalker/video-retalking.git
    cd video-retalking && pip install -r requirements.txt && cd ..
    ```
+
+## 🎥 Running the Pipeline
+
+Extract a 15-second snippet and dub it:
+```bash
+python dub_video.py \
+    --input_video "supernan_training.mp4" \
+    --start_time 00:00:15 \
+    --end_time 00:00:30 \
+    --output_video "final_hindi_dub.mp4"
+```
