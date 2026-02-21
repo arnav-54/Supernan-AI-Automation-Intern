@@ -17,3 +17,10 @@ def generate_hindi_dub(segments, speaker_audio_path, output_audio_path):
         speaker_wav=speaker_audio_path,
         language="hi"
     )
+
+    # VRAM Cleanup
+    del tts
+    if device == "cuda":
+        torch.cuda.empty_cache()
+    gc.collect()
+    return output_audio_path
