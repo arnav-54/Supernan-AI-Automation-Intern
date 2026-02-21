@@ -25,3 +25,9 @@ def main():
     
     print("=== Step 2: Extract Speaker Audio ===")
     extract_audio(chunk_video, ref_audio)
+
+    print("=== Step 3: Transcribe ===")
+    segments = transcribe_audio(ref_audio)
+    
+    print("=== Step 4: Translate -> Hindi ===")
+    hindi_segments = translate_to_hindi(segments)
