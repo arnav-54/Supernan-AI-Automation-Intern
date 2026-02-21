@@ -66,3 +66,7 @@ python dub_video.py \
 
 ### Estimated Cost at Scale
 - **In-house cluster (RunPod/Lambda)**: ~$0.05 to $0.15 per minute depending on GPU density. ~500 hrs (30k mins) = $1,500 - $4,500.
+
+## ⚠️ Known Limitations & Future Improvements
+- **VideoReTalking Latency**: High generation time. With more time, I would write a TensorRT optimized inference engine.
+- **Voice Emotion Matching**: XTTS catches tone but sometimes struggles with high energy emotion. A secondary emotion-mapping layer (e.g. mapping prosody) would be implemented.
