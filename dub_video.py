@@ -13,3 +13,9 @@ def main():
     parser.add_argument("--end_time", type=str, default="00:00:30", help="End time (HH:MM:SS)")
     parser.add_argument("--output_video", type=str, default="final_dubbed.mp4", help="Final output path")
     args = parser.parse_args()
+
+    work_dir = "temp_processing"
+    os.makedirs(work_dir, exist_ok=True)
+    chunk_video = f"{work_dir}/chunk.mp4"
+    ref_audio = f"{work_dir}/ref_audio.wav"
+    hindi_audio = f"{work_dir}/dubbed_audio.wav"
