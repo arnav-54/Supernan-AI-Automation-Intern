@@ -19,3 +19,9 @@ def main():
     chunk_video = f"{work_dir}/chunk.mp4"
     ref_audio = f"{work_dir}/ref_audio.wav"
     hindi_audio = f"{work_dir}/dubbed_audio.wav"
+
+    print("=== Step 1: Crop Video ===")
+    extract_video_segment(args.input_video, chunk_video, args.start_time, args.end_time)
+    
+    print("=== Step 2: Extract Speaker Audio ===")
+    extract_audio(chunk_video, ref_audio)
