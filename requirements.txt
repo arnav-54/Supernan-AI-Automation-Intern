@@ -1,2 +1,7 @@
 faster-whisper
 TTS
+deep-translator
+librosa
+soundfile
+pydub
+ffmpeg-python
