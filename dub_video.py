@@ -34,20 +34,23 @@ def main():
 
     print("\n=== Step 3: Transcription (Whisper) ===")
     segments = transcribe_audio(ref_audio)
+    print(f"Transcribed Segments: {segments}")
     
     print("\n=== Step 4: Machine Translation (Context-Aware) ===")
     hindi_segments = translate_to_hindi(segments)
 
     print("\n=== Step 5: Voice Cloning (XTTS v2) ===")
-    generate_hindi_dub(hindi_segments, long_ref_audio, raw_hindi_audio)
+    out_path = generate_hindi_dub(hindi_segments, long_ref_audio, raw_hindi_audio)
     
-    print("\n=== Step 6: Duration Matching (Perfect Sync) ===")
-    match_audio_duration(raw_hindi_audio, target_duration, synced_hindi_audio)
-    
-    print("\n=== Step 7: Lip-Sync & Face Enhancement (VideoReTalking + GFPGAN) ===")
-    run_video_retalking(chunk_video, synced_hindi_audio, args.output_video)
-    
-    print(f"\n✨ SUCCESS! Your dubbed video is ready at: {args.output_video}")
+    if out_path and os.path.exists(raw_hindi_audio):
+        print("\n=== Step 6: Duration Matching (Perfect Sync) ===")
+        match_audio_duration(raw_hindi_audio, target_duration, synced_hindi_audio)
+        
+        print("\n=== Step 7: Lip-Sync & Face Enhancement (VideoReTalking + GFPGAN) ===")
+        run_video_retalking(chunk_video, synced_hindi_audio, args.output_video)
+        print(f"\n✨ SUCCESS! Your dubbed video is ready at: {args.output_video}")
+    else:
+        print("\n⚠️ Skipping Step 6 & 7: No speech detected or TTS failed for this segment.")
 
 if __name__ == "__main__":
     main()
