@@ -14,7 +14,9 @@ To achieve max fidelity with a budget of **₹0**, the pipeline strictly leverag
 ### Clever Handling of Constraints
 To run heavy models (VideoReTalking + XTTS v2) on Colab without crashing out of memory:
 - **Modular execution:** The pipeline flushes VRAM between steps (`torch.cuda.empty_cache()` and deleting model instances).
-- **Chunking/Batching**: The translation and voice generation steps batch audio into smaller sentence chunks.
+- **Chunking/Batching**: The translation and voice generation steps batch audio into smaller chunks for stability.
+- **Intelligent Duration Matching**: Uses chained `atempo` filters to handle extreme speed ratios (stretching/compressing) ensuring perfect lip-sync even if the translated audio is significantly longer or shorter.
+- **Preview Fallback**: If `VideoReTalking` is not available (e.g., during local development or weight setup), the pipeline automatically falls back to an audio-video merge so you can verify the translation and voice cloning immediately.
 
 ## 🚀 Setup Instructions
 
