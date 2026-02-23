@@ -59,19 +59,45 @@ def match_audio_duration(audio_path: str, target_duration: float, output_path: s
     
     print(f"Modifying audio speed: {current_duration:.2f}s -> {target_duration:.2f}s (Ratio: {ratio:.2f})")
     
+    # atempo filter supports 0.5 to 100.0. If ratio is outside this, we must chain.
+    # Note: ratio = current / target. 
+    # If ratio < 1.0, audio is shorter than target -> slow down (tempo < 1)
+    # If ratio > 1.0, audio is longer than target -> speed up (tempo > 1)
+    
     try:
+        if 0.5 <= ratio <= 100.0:
+            filter_str = f"atempo={ratio}"
+        else:
+            # Chain filters. For example, if ratio is 0.25, use atempo=0.5,atempo=0.5
+            filters = []
+            temp_ratio = ratio
+            while temp_ratio < 0.5:
+                filters.append("atempo=0.5")
+                temp_ratio /= 0.5
+            while temp_ratio > 100.0:
+                filters.append("atempo=100.0")
+                temp_ratio /= 100.0
+            filters.append(f"atempo={temp_ratio}")
+            filter_str = ",".join(filters)
+
         (
             ffmpeg
             .input(audio_path)
-            .filter('atempo', ratio)
-            .output(output_path)
-            .overwrite_output()
-            .run(quiet=True)
+            .filter_multi_output('atempo', filter_str) if False else # use string filter
+            ffmpeg.input(audio_path).filter('atempo', ratio) if 0.5 <= ratio <= 100 else
+            ffmpeg.input(audio_path).extra_args('-filter:a', filter_str)
         )
+        # Simplified:
+        cmd = [
+            'ffmpeg', '-i', audio_path,
+            '-filter:a', filter_str,
+            '-y', output_path
+        ]
+        import subprocess
+        subprocess.run(cmd, check=True, capture_output=True)
         return output_path
-    except ffmpeg.Error as e:
-        print("FFmpeg duration match error:", e.stderr)
-        # Fallback to copy if it fails
+    except Exception as e:
+        print("FFmpeg duration match error:", e)
         import shutil
         shutil.copy(audio_path, output_path)
         return output_path
