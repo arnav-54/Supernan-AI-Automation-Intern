@@ -1,4 +1,8 @@
-faster-whisper
+transformers
+torchaudio
+onnxruntime==1.20.1
+onnxruntime-gpu==1.20.1
+onnx==1.20.1
 TTS
 deep-translator
 librosa
@@ -8,4 +12,3 @@ ffmpeg-python
 moviepy
 numpy
 torch
-torchaudio

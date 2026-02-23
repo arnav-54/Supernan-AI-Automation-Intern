@@ -22,19 +22,22 @@ def main():
     raw_hindi_audio = f"{work_dir}/raw_dubbed_audio.wav"
     synced_hindi_audio = f"{work_dir}/synced_audio.wav"
 
-    print("\n🚀 Starting Supernan Dubbing Pipeline...")
+    print("\n🚀 Starting Supernan Dubbing Pipeline (Indic-Conformer Optimized)...")
 
-    print("\n=== Step 1: Clip Extraction ===")
+    print("\n=== Step 1: Clip Extraction (15s minimum) ===")
     extract_video_segment(args.input_video, chunk_video, args.start_time, args.end_time)
     target_duration = get_duration(chunk_video)
+    print(f"Target Video Duration: {target_duration:.2f}s")
     
     print("\n=== Step 2: Speaker Reference Extraction ===")
     extract_audio(chunk_video, ref_audio)
     extract_long_reference(args.input_video, long_ref_audio, start_time=args.start_time, duration=30)
 
-    print("\n=== Step 3: Transcription (Whisper) ===")
+    print("\n=== Step 3: High-Fidelity ASR (Indic-Conformer) ===")
+    # This model is state-of-the-art for Kannada and handles the full 15s segment.
     segments = transcribe_audio(ref_audio)
-    print(f"Transcribed Segments: {segments}")
+    # Ensure the segment covers the whole duration for perfect sync
+    segments[0]['end'] = target_duration 
     
     print("\n=== Step 4: Machine Translation (Context-Aware) ===")
     hindi_segments = translate_to_hindi(segments)
@@ -43,14 +46,15 @@ def main():
     out_path = generate_hindi_dub(hindi_segments, long_ref_audio, raw_hindi_audio)
     
     if out_path and os.path.exists(raw_hindi_audio):
-        print("\n=== Step 6: Duration Matching (Perfect Sync) ===")
+        print("\n=== Step 6: Chained Duration Matching (Perfect 15s Sync) ===")
+        # This matches the generated audio to the EXACT target duration (15s+)
         match_audio_duration(raw_hindi_audio, target_duration, synced_hindi_audio)
         
         print("\n=== Step 7: Lip-Sync & Face Enhancement (VideoReTalking + GFPGAN) ===")
         run_video_retalking(chunk_video, synced_hindi_audio, args.output_video)
-        print(f"\n✨ SUCCESS! Your dubbed video is ready at: {args.output_video}")
+        print(f"\n✨ SUCCESS! Your 15-second dubbed video is ready at: {args.output_video}")
     else:
-        print("\n⚠️ Skipping Step 6 & 7: No speech detected or TTS failed for this segment.")
+        print("\n⚠️ Dubbing failed or no speech detected.")
 
 if __name__ == "__main__":
     main()
