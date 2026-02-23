@@ -1,13 +1,13 @@
 import argparse
 import os
-from core.media_utils import extract_video_segment, extract_audio
+from core.media_utils import extract_video_segment, extract_audio, extract_long_reference, get_duration, match_audio_duration
 from core.transcribe import transcribe_audio
 from core.translate import translate_to_hindi
 from core.voice_clone import generate_hindi_dub
 from core.lipsync import run_video_retalking
 
 def main():
-    parser = argparse.ArgumentParser(description="Auto Voice Dubbing and Lipsync Pipeline")
+    parser = argparse.ArgumentParser(description="Supernan - AI Voice Dubbing & Lipsync Pipeline")
     parser.add_argument("--input_video", type=str, required=True, help="Path to input video")
     parser.add_argument("--start_time", type=str, default="00:00:15", help="Start time (HH:MM:SS)")
     parser.add_argument("--end_time", type=str, default="00:00:30", help="End time (HH:MM:SS)")
@@ -18,27 +18,36 @@ def main():
     os.makedirs(work_dir, exist_ok=True)
     chunk_video = f"{work_dir}/chunk.mp4"
     ref_audio = f"{work_dir}/ref_audio.wav"
-    hindi_audio = f"{work_dir}/dubbed_audio.wav"
+    long_ref_audio = f"{work_dir}/long_ref_audio.wav"
+    raw_hindi_audio = f"{work_dir}/raw_dubbed_audio.wav"
+    synced_hindi_audio = f"{work_dir}/synced_audio.wav"
 
-    print("=== Step 1: Crop Video ===")
+    print("\n🚀 Starting Supernan Dubbing Pipeline...")
+
+    print("\n=== Step 1: Clip Extraction ===")
     extract_video_segment(args.input_video, chunk_video, args.start_time, args.end_time)
+    target_duration = get_duration(chunk_video)
     
-    print("=== Step 2: Extract Speaker Audio ===")
+    print("\n=== Step 2: Speaker Reference Extraction ===")
     extract_audio(chunk_video, ref_audio)
+    extract_long_reference(args.input_video, long_ref_audio, start_time=args.start_time, duration=30)
 
-    print("=== Step 3: Transcribe ===")
+    print("\n=== Step 3: Transcription (Whisper) ===")
     segments = transcribe_audio(ref_audio)
     
-    print("=== Step 4: Translate -> Hindi ===")
+    print("\n=== Step 4: Machine Translation (Context-Aware) ===")
     hindi_segments = translate_to_hindi(segments)
 
-    print("=== Step 5: Voice Cloning (XTTS v2) ===")
-    generate_hindi_dub(hindi_segments, ref_audio, hindi_audio)
+    print("\n=== Step 5: Voice Cloning (XTTS v2) ===")
+    generate_hindi_dub(hindi_segments, long_ref_audio, raw_hindi_audio)
     
-    print("=== Step 6: High Fidelity Lipsync (VideoReTalking) ===")
-    run_video_retalking(chunk_video, hindi_audio, args.output_video)
+    print("\n=== Step 6: Duration Matching (Perfect Sync) ===")
+    match_audio_duration(raw_hindi_audio, target_duration, synced_hindi_audio)
     
-    print(f"\n✅ Pipeline Complete! Output saved to: {args.output_video}")
+    print("\n=== Step 7: Lip-Sync & Face Enhancement (VideoReTalking + GFPGAN) ===")
+    run_video_retalking(chunk_video, synced_hindi_audio, args.output_video)
+    
+    print(f"\n✨ SUCCESS! Your dubbed video is ready at: {args.output_video}")
 
 if __name__ == "__main__":
     main()

@@ -9,7 +9,7 @@ def transcribe_audio(audio_path: str):
     compute_type = "float16" if device == "cuda" else "int8"
     
     model = WhisperModel("base", device=device, compute_type=compute_type)
-    segments, info = model.transcribe(audio_path, beam_size=5, language="en")
+    segments, info = model.transcribe(audio_path, beam_size=5) # Auto-detect language
 
     results = []
     for segment in segments:
