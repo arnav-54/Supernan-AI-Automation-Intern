@@ -37,8 +37,11 @@ def generate_hindi_dub(segments, speaker_audio_path, output_audio_path):
         )
         temp_files.append(temp_out)
 
-    # Combine batches (simple concatenation for this demo, 
-    # but could use crossfades for scale)
+    if not temp_files:
+        print("No audio segments generated. Skipping wave creation.")
+        return None
+
+    # Combine batches
     import wave
     with wave.open(output_audio_path, 'wb') as outfile:
         for i, infile_name in enumerate(temp_files):
