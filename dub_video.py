@@ -1,4 +1,13 @@
 import argparse
+# Global patch for PyTorch 2.6+ to allow loading Coqui TTS models
+import torch
+import torch.serialization
+from functools import partial
+
+# We trust Coqui TTS models, so we disable the strict 'weights_only' check
+# that prevents loading of complex config classes.
+torch.load = partial(torch.load, weights_only=False)
+
 import os
 from core.media_utils import extract_video_segment, extract_audio, extract_long_reference, get_duration, match_audio_duration
 from core.transcribe import transcribe_audio
@@ -22,35 +31,32 @@ def main():
     raw_hindi_audio = f"{work_dir}/raw_dubbed_audio.wav"
     synced_hindi_audio = f"{work_dir}/synced_audio.wav"
 
-    print("\n🚀 Starting Supernan Dubbing Pipeline (Indic-Conformer Optimized)...")
+    print("\n🚀 Starting Supernan Dubbing Pipeline (Modular High-Fidelity)...")
 
-    print("\n=== Step 1: Clip Extraction (15s minimum) ===")
+    print("\n=== Stage 1: Precision Clipping (FFmpeg) ===")
     extract_video_segment(args.input_video, chunk_video, args.start_time, args.end_time)
     target_duration = get_duration(chunk_video)
     print(f"Target Video Duration: {target_duration:.2f}s")
     
-    print("\n=== Step 2: Speaker Reference Extraction ===")
+    print("\n=== Stage 2: Denoised Audio Extraction (FFmpeg) ===")
     extract_audio(chunk_video, ref_audio)
     extract_long_reference(args.input_video, long_ref_audio, start_time=args.start_time, duration=30)
 
-    print("\n=== Step 3: High-Fidelity ASR (Indic-Conformer) ===")
-    # This model is state-of-the-art for Kannada and handles the full 15s segment.
+    print("\n=== Stage 3: High-Accuracy Transcription (Whisper-Medium) ===")
     segments = transcribe_audio(ref_audio)
-    # Ensure the segment covers the whole duration for perfect sync
     segments[0]['end'] = target_duration 
     
-    print("\n=== Step 4: Machine Translation (Context-Aware) ===")
+    print("\n=== Stage 4: Natural Hindi Translation (IndicTrans2) ===")
     hindi_segments = translate_to_hindi(segments)
 
-    print("\n=== Step 5: Voice Cloning (XTTS v2) ===")
+    print("\n=== Stage 5: Smart Voice Cloning (XTTS v2) ===")
     out_path = generate_hindi_dub(hindi_segments, long_ref_audio, raw_hindi_audio)
     
     if out_path and os.path.exists(raw_hindi_audio):
-        print("\n=== Step 6: Chained Duration Matching (Perfect 15s Sync) ===")
-        # This matches the generated audio to the EXACT target duration (15s+)
+        print("\n=== Stage 6: Natural Sync & Speed Locking (1.15x) ===")
         match_audio_duration(raw_hindi_audio, target_duration, synced_hindi_audio)
         
-        print("\n=== Step 7: Lip-Sync & Face Enhancement (VideoReTalking + GFPGAN) ===")
+        print("\n=== Stage 7: Robust Lip-Sync (VideoReTalking) ===")
         run_video_retalking(chunk_video, synced_hindi_audio, args.output_video)
         print(f"\n✨ SUCCESS! Your 15-second dubbed video is ready at: {args.output_video}")
     else:

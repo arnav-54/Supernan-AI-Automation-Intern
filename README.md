@@ -1,74 +1,47 @@
-# Supernan AI Automation Intern Assessment
+# Supernan AI Dubbing: Technical Pipeline Summary
 
-This repository contains a modular Python pipeline (`dub_video.py`) that generates a high-fidelity Hindi-dubbed version of a video.
+"Supernan AI Dubbing ek end-to-end modular pipeline hai jo English videos ko natural Hindi mein dub karta hai. Humne isme zero-cost open-source tools use kiye hain aur focus 'Voice Accuracy' aur 'Lip-Sync' par rakha hai."
 
-## 🌟 Architecture & Resourcefulness
+## 🚀 Pipeline Stages
 
-To achieve max fidelity with a budget of **₹0**, the pipeline strictly leverages state-of-the-art open-source models optimized for free GPU tiers (like Google Colab T4):
-1. **Extraction**: `ffmpeg-python` (Zero cost, fast).
-2. **Transcription**: `faster-whisper` (Orders of magnitude faster than standard Whisper).
-3. **Translation**: Context-aware translating with `IndicTrans2` or `deep-translator`.
-4. **Voice Cloning**: `Coqui XTTS v2` (Zero-shot voice cloning with speaker reference).
-5. **Lip Sync**: `VideoReTalking` with GFPGAN (Prevents mouth blurring and retains face resolution—crucial for 40% Visual Fidelity requirement).
+### Stage 1: Precision Clipping (FFmpeg)
+* Sabse pehle original video se exactly 20-second ka segment extract kiya gaya.
+* Isse processing fast hoti hai aur project ki requirements (15-30s) puri hoti hain.
 
-### Clever Handling of Constraints
-To run heavy models (VideoReTalking + XTTS v2) on Colab without crashing out of memory:
-- **Modular execution:** The pipeline flushes VRAM between steps (`torch.cuda.empty_cache()` and deleting model instances).
-- **Chunking/Batching**: The translation and voice generation steps batch audio into smaller chunks for stability.
-- **Intelligent Duration Matching**: Uses chained `atempo` filters to handle extreme speed ratios (stretching/compressing) ensuring perfect lip-sync even if the translated audio is significantly longer or shorter.
-- **Preview Fallback**: If `VideoReTalking` is not available (e.g., during local development or weight setup), the pipeline automatically falls back to an audio-video merge so you can verify the translation and voice cloning immediately.
+### Stage 2: Denoised Audio Extraction (FFmpeg)
+* Original speaker ki voice ko extract kiya gaya.
+* **afftdn** (Adaptive Noise Reduction) aur **highpass** filters ka use kiya gaya taaki background noise hat jaye aur voice cloning ke liye 'Clean Source' mile.
 
-## 🚀 Setup Instructions
+### Stage 3: High-Accuracy Transcription (OpenAI Whisper)
+* **Whisper-medium** model ka use karke English speech ko text mein badla gaya. Ye open-source models mein sabsay behtreen accuracy deta hai.
 
-We highly recommend running this pipeline in **Google Colab** to easily deploy the GPU-heavy dependencies.
+### Stage 4: Natural Hindi Translation (IndicTrans2)
+* Google Translate ki jagah **IndicTrans2 (AI4Bharat)** use kiya gaya. Ye model Indian languages ke liye context-aware translation karta hai, jo ki 'nanny training' jaisa sensitive content ke liye bahut zaruri hai.
 
-1. **Clone Repo**:
-   ```bash
-   git clone https://github.com/arnav-54/Supernan-AI-Automation-Intern.git
-   cd Supernan-AI-Automation-Intern
-   ```
-2. **Install System Dependencies**:
-   ```bash
-   sudo apt-get update && sudo apt-get install -y ffmpeg
-   ```
-3. **Install Requirements**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Clone VideoReTalking**:
-   ```bash
-   git clone https://github.com/OpenTalker/video-retalking.git
-   cd video-retalking && pip install -r requirements.txt && cd ..
-   ```
+### Stage 5: Smart Voice Cloning (Coqui XTTS v2)
+* **XTTS v2** model use kiya gaya jo sirf 5-10 second ki reference audio se original speaker ki voice clone kar leta hai.
+* **Smart Splitting**: Text ko logical points (conjunctions) par toda gaya taaki AI "fumble" na kare.
+* **Clarity Booster**: Audio generate hone ke baad professional studio filters (Equalizer, Compressor, Loudnorm) lagaye gaye.
 
-## 🎥 Running the Pipeline
+### Stage 6: Natural Sync & Speed Locking (FFmpeg)
+* Audio ki speed ko video se match kiya gaya, lekin speed ko **1.15x** tak limit rakha gaya taaki voice unnatural na lage.
+* Agar audio lambi ho jaye, toh humne **'Smart Padding'** (last frame freeze) use kiya hai.
 
-Extract a 15-second snippet and dub it:
-```bash
-python dub_video.py \
-    --input_video "supernan_training.mp4" \
-    --start_time 00:00:15 \
-    --end_time 00:00:30 \
-    --output_video "final_hindi_dub.mp4"
-```
+### Stage 7: Robust Lip-Sync (VideoReTalking)
+* **VideoReTalking** model ka use karke video ke lip movements ko Hindi audio ke according update kiya gaya. Ye Wav2Lip se zyada sharp result deta hai.
 
-## 📈 The "Scale" Question (500 Hours Overnight)
+---
 
-**Question:** How would you modify this script to process 500 hours of video overnight with a budget?
-**Answer:** Processing 500h (~30,000 mins) overnight requires heavy horizontal scaling:
-1. **Infrastructure**: Transition from sequential execution to a distributed microservice architecture on AWS (EKS) or RunPod Serverless.
-2. **Message Queue**: Use RabbitMQ or AWS SQS to distribute video chunks. We'd chunk videos into 2-5 minute segments.
-3. **Pipeline Decoupling**:
-   - `Worker Group A (CPU)`: Downloads and chunks video (FFmpeg).
-   - `Worker Group B (GPU - L4)`: Transcribes using Faster-Whisper.
-   - `Worker Group C (GPU/CPU)`: Translates in bulk.
-   - `Worker Group D (GPU - A100)`: Generates cloned audio with XTTSv2.
-   - `Worker Group E (GPU - A100)`: VideoReTalking is the bottleneck. This requires the largest fleet.
-4. **Assembly**: A final CPU worker merges chunks back using temporal crossfading.
+## 🛠️ Tools & Models Used
+* **FFmpeg**: Audio extraction, denoising, speed adjustment, aur final muxing ke liye.
+* **OpenAI Whisper (Medium)**: Transcription ke liye.
+* **IndicTrans2 (AI4Bharat)**: Professional Hindi translation ke liye.
+* **Coqui XTTS v2**: Zero-shot voice cloning ke liye.
+* **VideoReTalking**: High-quality lip-syncing ke liye.
+* **GFPGAN**: Face restoration aur sharpening ke liye.
 
-### Estimated Cost at Scale
-- **In-house cluster (RunPod/Lambda)**: ~$0.05 to $0.15 per minute depending on GPU density. ~500 hrs (30k mins) = $1,500 - $4,500.
+---
 
-## ⚠️ Known Limitations & Future Improvements
-- **VideoReTalking Latency**: High generation time. With more time, I would write a TensorRT optimized inference engine.
-- **Voice Emotion Matching**: XTTS catches tone but sometimes struggles with high energy emotion. A secondary emotion-mapping layer (e.g. mapping prosody) would be implemented.
+## 📓 Usage
+For high-fidelity results with GPU acceleration (Face Restoration & Lip-Sync), use the provided Colab Notebook:
+`Supernan_AI_Dubbing.ipynb`
